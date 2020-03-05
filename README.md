@@ -1,11 +1,6 @@
-## My Project
+## AWS HordeSAT Batch Example
 
-TODO: Fill this README out!
-
-Be sure to:
-
-* Change the title in this README
-* Edit your repository description on GitHub
+Please see the README in this project for information about this sample: https://github.com/aws-samples/aws-batch-comp-infrastructure-sample
 
 ## License
 
