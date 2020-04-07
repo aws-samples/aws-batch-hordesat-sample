@@ -14,7 +14,14 @@ sleep 2
 echo main node: ${AWS_BATCH_JOB_MAIN_NODE_INDEX}
 echo this node: ${AWS_BATCH_JOB_NODE_INDEX}
 echo Downloading problem from S3: ${COMP_S3_PROBLEM_PATH}
-aws s3 cp s3://${S3_BKT}/${COMP_S3_PROBLEM_PATH} supervised-scripts/test.cnf
+
+if [[ "${COMP_S3_PROBLEM_PATH}" == *".xz" ]];
+then
+  aws s3 cp s3://${S3_BKT}/${COMP_S3_PROBLEM_PATH} supervised-scripts/test.cnf.xz
+  unxz supervised-scripts/test.cnf.xz
+else
+  aws s3 cp s3://${S3_BKT}/${COMP_S3_PROBLEM_PATH} supervised-scripts/test.cnf
+fi
 
 # Set child by default switch to main if on main node container
 NODE_TYPE="child"
