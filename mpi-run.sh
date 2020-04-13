@@ -59,7 +59,7 @@ wait_for_nodes () {
   cat combined_hostfile
 
   # REPLACE THE FOLLOWING LINE WITH YOUR PARTICULAR SOLVER
-  time mpirun --mca btl_tcp_if_include eth0 --allow-run-as-root -np ${AWS_BATCH_JOB_NUM_NODES} --hostfile combined_hostfile /hordesat/hordesat  -c=${NUM_PROCESSES} -d=7 supervised-scripts/test.cnf
+  time mpirun --mca btl_tcp_if_include eth0 --allow-run-as-root -np ${AWS_BATCH_JOB_NUM_NODES} --hostfile combined_hostfile /hordesat/hordesat  -c=${NUM_PROCESSES} -t=28800 -d=7 supervised-scripts/test.cnf
 }
 
 # Fetch and run a script
