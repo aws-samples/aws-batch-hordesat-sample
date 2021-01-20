@@ -39,6 +39,7 @@ wait_for_nodes () {
 
   availablecores=$(nproc)
   log "master details -> $ip:$availablecores"
+  log "main IP: $ip"
 #  echo "$ip slots=$availablecores" >> $HOST_FILE_PATH
   echo "$ip" >> $HOST_FILE_PATH
   lines=$(ls -dq /tmp/hostfile* | wc -l)
