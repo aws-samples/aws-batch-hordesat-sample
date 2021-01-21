@@ -26,6 +26,8 @@ RUN git clone https://github.com/biotomas/hordesat
 RUN cd hordesat && ./makehordesat.sh
 ################
 FROM horde_base AS horde_liaison
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt install -y awscli
 COPY --from=builder /hordesat/hordesat /hordesat/hordesat
 ADD mpi-run.sh supervised-scripts/mpi-run.sh
 USER horde
