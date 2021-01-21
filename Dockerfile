@@ -1,57 +1,35 @@
-FROM ubuntu:16.04
-
-RUN apt-get update && apt-get install -y openssh-server git
-RUN mkdir /var/run/sshd
-RUN echo 'root:THEPASSWORDYOUCREATED' | chpasswd
-RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-
-# SSH login fix. Otherwise user is kicked off after login
-RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
-RUN git clone https://github.com/biotomas/hordesat
-
+################
+FROM ubuntu:16.04 AS horde_base
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt install -y openssh-server iproute2 openmpi-bin openmpi-common iputils-ping \
+    && mkdir /var/run/sshd \
+    && sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd \
+    && setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/sshd \
+    && useradd -ms /bin/bash horde \
+    && chown -R horde /etc/ssh/ \
+    && su - horde -c \
+        'ssh-keygen -q -t rsa -f ~/.ssh/id_rsa -N "" \
+        && cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys \
+        && cp /etc/ssh/sshd_config ~/.ssh/sshd_config \
+        && sed -i "s/UsePrivilegeSeparation yes/UsePrivilegeSeparation no/g" ~/.ssh/sshd_config \
+        && printf "Host *\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config'
+WORKDIR /home/horde
 ENV NOTVISIBLE "in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile
-
-
-RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-ENV SSHDIR /root/.ssh
-RUN mkdir -p ${SSHDIR}
-RUN touch ${SSHDIR}/sshd_config
-RUN ssh-keygen -t rsa -f ${SSHDIR}/ssh_host_rsa_key -N ''
-RUN cp ${SSHDIR}/ssh_host_rsa_key.pub ${SSHDIR}/authorized_keys
-RUN cp ${SSHDIR}/ssh_host_rsa_key ${SSHDIR}/id_rsa
-RUN echo " IdentityFile ${SSHDIR}/id_rsa" >> /etc/ssh/ssh_config
-RUN echo "Host *" >> /etc/ssh/ssh_config && echo " StrictHostKeyChecking no" >> /etc/ssh/ssh_config
-RUN chmod -R 600 ${SSHDIR}/* && \
-chown -R ${USER}:${USER} ${SSHDIR}/
-# check if ssh agent is running or not, if not, run
-RUN eval `ssh-agent -s` && ssh-add ${SSHDIR}/id_rsa
-
-
-
-RUN apt-get update
-RUN apt-get install wget -y
-RUN apt-get install unzip
-RUN apt-get install build-essential -y
-RUN apt-get install zlib1g-dev -y
-RUN DEBIAN_FRONTEND=noninteractive apt install -y iproute2 cmake python python-pip build-essential gfortran wget curl
-RUN pip install supervisor awscli
-RUN apt-get install openmpi-bin openmpi-common libopenmpi-dev iputils-ping -y
-ADD hordesat hordesat
-
-#RUN wget https://baldur.iti.kit.edu/hordesat/files/hordesat.zip
-#RUN unzip hordesat.zip
-RUN cd hordesat && ./makehordesat.sh
-#ENV LD_LIBRARY_PATH=/usr/lib/openmpi/lib/:$LD_LIBRARY_PATH
-#ADD test.cnf supervised-scripts/test.cnf
-ADD mpi-run.sh supervised-scripts/mpi-run.sh
-ADD make_combined_hostfile.py supervised-scripts/make_combined_hostfile.py
-RUN chmod 755 supervised-scripts/mpi-run.sh
 EXPOSE 22
-
-#CMD hordesat/hordesat
+################
+FROM ubuntu:16.04 AS builder
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt install -y cmake build-essential zlib1g-dev libopenmpi-dev git wget unzip build-essential zlib1g-dev iproute2 cmake python python-pip build-essential gfortran wget curl
+#ADD hordesat hordesat
+RUN git clone https://github.com/biotomas/hordesat
+RUN cd hordesat && ./makehordesat.sh
+################
+FROM horde_base AS horde_liaison
+COPY --from=builder /hordesat/hordesat /hordesat/hordesat
+ADD mpi-run.sh supervised-scripts/mpi-run.sh
+USER horde
+CMD ["/usr/sbin/sshd", "-D", "-f", "/home/horde/.ssh/sshd_config"]
 CMD supervised-scripts/mpi-run.sh
-
-
 
 
