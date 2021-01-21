@@ -27,7 +27,7 @@ RUN cd hordesat && ./makehordesat.sh
 ################
 FROM horde_base AS horde_liaison
 RUN apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt install -y awscli
+    && DEBIAN_FRONTEND=noninteractive apt install -y awscli python3 mpi
 COPY --from=builder /hordesat/hordesat /hordesat/hordesat
 ADD mpi-run.sh supervised-scripts/mpi-run.sh
 USER horde
