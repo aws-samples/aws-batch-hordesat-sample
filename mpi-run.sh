@@ -17,10 +17,10 @@ echo Downloading problem from S3: ${COMP_S3_PROBLEM_PATH}
 
 if [[ "${COMP_S3_PROBLEM_PATH}" == *".xz" ]];
 then
-  aws s3 cp s3://${S3_BKT}/${COMP_S3_PROBLEM_PATH} supervised-scripts/test.cnf.xz
-  unxz supervised-scripts/test.cnf.xz
+  aws s3 cp s3://${S3_BKT}/${COMP_S3_PROBLEM_PATH} test.cnf.xz
+  unxz test.cnf.xz
 else
-  aws s3 cp s3://${S3_BKT}/${COMP_S3_PROBLEM_PATH} supervised-scripts/test.cnf
+  aws s3 cp s3://${S3_BKT}/${COMP_S3_PROBLEM_PATH} test.cnf
 fi
 
 # Set child by default switch to main if on main node container
@@ -60,7 +60,7 @@ wait_for_nodes () {
   cat combined_hostfile
 
   # REPLACE THE FOLLOWING LINE WITH YOUR PARTICULAR SOLVER
-  time mpirun --mca btl_tcp_if_include eth0 --allow-run-as-root -np ${AWS_BATCH_JOB_NUM_NODES} --hostfile combined_hostfile /hordesat/hordesat  -c=${NUM_PROCESSES} -t=28800 -d=7 supervised-scripts/test.cnf
+  time mpirun --mca btl_tcp_if_include eth0 --allow-run-as-root -np ${AWS_BATCH_JOB_NUM_NODES} --hostfile combined_hostfile /hordesat/hordesat  -c=${NUM_PROCESSES} -t=28800 -d=7 test.cnf
 }
 
 # Fetch and run a script
