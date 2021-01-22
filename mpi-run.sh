@@ -56,7 +56,7 @@ wait_for_nodes () {
 
   # All of the hosts report their IP and number of processors. Combine all these
   # into one file with the following script:
-  python supervised-scripts/make_combined_hostfile.py ${ip}
+  supervised-scripts/make_combined_hostfile.py ${ip}
   cat combined_hostfile
 
   # REPLACE THE FOLLOWING LINE WITH YOUR PARTICULAR SOLVER

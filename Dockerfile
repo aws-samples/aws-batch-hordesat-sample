@@ -29,6 +29,8 @@ FROM horde_base AS horde_liaison
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt install -y awscli python3 mpi
 COPY --from=builder /hordesat/hordesat /hordesat/hordesat
+ADD make_combined_hostfile.py supervised-scripts/make_combined_hostfile.py
+RUN chmod 755 supervised-scripts/make_combined_hostfile.py
 ADD mpi-run.sh supervised-scripts/mpi-run.sh
 USER horde
 CMD ["/usr/sbin/sshd", "-D", "-f", "/home/horde/.ssh/sshd_config"]
