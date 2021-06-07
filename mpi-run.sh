@@ -7,8 +7,6 @@ log () {
   echo "${BASENAME} - ${1}"
 }
 HOST_FILE_PATH="/tmp/hostfile"
-#aws s3 cp $S3_INPUT $SCRATCH_DIR
-#tar -xvf $SCRATCH_DIR/*.tar.gz -C $SCRATCH_DIR
 
 sleep 2
 echo main node: ${AWS_BATCH_JOB_MAIN_NODE_INDEX}
@@ -39,8 +37,9 @@ wait_for_nodes () {
 
   availablecores=$(nproc)
   log "master details -> $ip:$availablecores"
+
+  # We need to log the main IP so that we can collect it from the logs and give it to the child nodes
   log "main IP: $ip"
-#  echo "$ip slots=$availablecores" >> $HOST_FILE_PATH
   echo "$ip" >> $HOST_FILE_PATH
   lines=$(ls -dq /tmp/hostfile* | wc -l)
   while [ "${AWS_BATCH_JOB_NUM_NODES}" -gt "${lines}" ]
@@ -50,7 +49,6 @@ wait_for_nodes () {
 
     log "$lines out of $AWS_BATCH_JOB_NUM_NODES nodes joined, check again in 1 second"
     sleep 1
-#    lines=$(sort $HOST_FILE_PATH|uniq|wc -l)
   done
 
 
@@ -74,7 +72,6 @@ report_to_master () {
 
   log "I am a child node -> $ip:$availablecores, reporting to the master node -> ${AWS_BATCH_JOB_MAIN_NODE_PRIVATE_IPV4_ADDRESS}"
 
-#  echo "$ip slots=$availablecores" >> $HOST_FILE_PATH${AWS_BATCH_JOB_NODE_INDEX}
   echo "$ip" >> $HOST_FILE_PATH${AWS_BATCH_JOB_NODE_INDEX}
   ping -c 3 ${AWS_BATCH_JOB_MAIN_NODE_PRIVATE_IPV4_ADDRESS}
   until scp $HOST_FILE_PATH${AWS_BATCH_JOB_NODE_INDEX} ${AWS_BATCH_JOB_MAIN_NODE_PRIVATE_IPV4_ADDRESS}:$HOST_FILE_PATH${AWS_BATCH_JOB_NODE_INDEX}
